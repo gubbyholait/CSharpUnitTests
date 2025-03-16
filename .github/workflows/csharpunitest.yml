@@ -1,1 +1,37 @@
+name: Run C# Unit Tests on PR
+
+on:
+  push:
+  pull_request:
+    branches:
+      - main  # Change this to your default branch if needed
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # Can also use 'windows-latest'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'  # Change to your .NET version
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Build Solution
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run Unit Tests
+        run: dotnet test --configuration Release --no-build --logger trx --results-directory TestResults
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: TestResults
 
