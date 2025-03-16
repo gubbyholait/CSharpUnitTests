@@ -1,31 +1,39 @@
 name: Run C# Unit Tests on PR
 
-on: [push]
+on:
+  push:
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore Dependencies
+        run: dotnet restore
 
-    - name: Build
-      run: dotnet build --no-restore
+      - name: Build Solution
+        run: dotnet build --configuration Release --no-restore
 
-    - name: Run tests
-      run: dotnet test --no-build --verbosity normal
+      - name: Run Unit Tests
+        run: dotnet test --configuration Release --no-build --logger trx --results-directory TestResults
 
-    - name: Upload test results
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: '**/TestResults/*.trx'
+      - name: Ensure TestResults Directory Exists
+        run: mkdir -p TestResults
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4  # Use latest version
+        with:
+          name: test-results
+          path: TestResults
